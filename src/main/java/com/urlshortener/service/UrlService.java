@@ -8,10 +8,10 @@ import com.urlshortener.exception.AliasConflictException;
 import com.urlshortener.exception.UrlExpiredException;
 import com.urlshortener.exception.UrlNotFoundException;
 import com.urlshortener.repository.UrlRepository;
-import com.urlshortener.util.AliasGenerator;
-import com.urlshortener.util.UrlValidator;
+import com.urlshortener.util.UrlUtils;
 import java.time.Instant;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,16 +25,19 @@ public class UrlService {
     private final UrlCache cache;
     private final String baseUrl;
 
-    public UrlService(UrlRepository repository, UrlCache cache, String baseUrl) {
+    public UrlService(
+            UrlRepository repository,
+            UrlCache cache,
+            @Value("${app.base-url}") String baseUrl) {
         this.repository = repository;
         this.cache = cache;
-        this.baseUrl = baseUrl;
+        this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
     @Transactional
     public UrlResponse create(CreateUrlRequest request) {
-        String longUrl = UrlValidator.normalize(request.url());
-        UrlValidator.validateTtl(request.ttlSeconds());
+        String longUrl = UrlUtils.normalize(request.url());
+        UrlUtils.validateTtl(request.ttlSeconds());
 
         Instant expiresAt = request.ttlSeconds() == null
                 ? null
@@ -42,13 +45,13 @@ public class UrlService {
 
         String alias = request.alias();
         if (alias != null && !alias.isBlank()) {
-            AliasGenerator.validateCustomAlias(alias.trim());
+            UrlUtils.validateCustomAlias(alias.trim());
             return saveNewUrl(alias.trim(), longUrl, expiresAt);
         }
 
         for (int attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
             try {
-                return saveNewUrl(AliasGenerator.generate(longUrl), longUrl, expiresAt);
+                return saveNewUrl(UrlUtils.generateAlias(longUrl), longUrl, expiresAt);
             } catch (AliasConflictException ignored) {
                 // Retry with a newly generated alias.
             }

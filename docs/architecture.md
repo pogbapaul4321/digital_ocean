@@ -27,7 +27,7 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant H as UrlApiController
+    participant H as UrlController
     participant S as UrlService
     participant V as Validators
     participant D as H2 Database
@@ -50,7 +50,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant H as RedirectController
+    participant H as UrlController
     participant S as UrlService
     participant K as UrlCache
     participant D as H2 Database
@@ -84,9 +84,9 @@ sequenceDiagram
 | Component | Responsibility |
 |-----------|----------------|
 | `UrlShortenerApplication` | Spring Boot bootstrap |
-| `controller` | HTTP routing and response mapping |
+| `UrlController` | HTTP routing and response mapping |
 | `service` | Business logic, caching, expiration checks |
 | `repository` | JPA persistence layer |
 | `cache` | Hot-path redirect cache |
-| `util` | Alias generation and URL validation |
+| `util` | URL validation and alias generation |
 | `exception` | Centralized API error handling |

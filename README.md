@@ -121,7 +121,7 @@ See [docs/architecture.md](docs/architecture.md) for request lifecycle diagrams 
 ```text
 src/main/java/com/urlshortener/
   UrlShortenerApplication.java   Spring Boot entrypoint
-  controller/                    REST and redirect endpoints
+  controller/                    UrlController (REST, redirect, health)
   service/                       Business logic
   repository/                    JPA repository
   entity/                        Database entity
