@@ -1,0 +1,21 @@
+name: url-shortener
+region: nyc
+services:
+  - name: api
+    github:
+      repo: pogbapaul4321/digital_ocean
+      branch: main
+      deploy_on_push: true
+    dockerfile_path: Dockerfile
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: PORT
+        value: "8080"
+      - key: DB_URL
+        value: jdbc:h2:file:/app/data/urlshortener;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE
+      - key: BASE_URL
+        value: https://REPLACE-WITH-YOUR-APP-URL
+    health_check:
+      http_path: /health

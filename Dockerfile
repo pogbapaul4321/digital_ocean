@@ -2,10 +2,10 @@
 FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /app
-COPY pom.xml mvnw ./
-COPY .mvn .mvn
+COPY pom.xml .
+RUN mvn -B -q dependency:go-offline
 COPY src ./src
-RUN chmod +x mvnw && ./mvnw -q -DskipTests package
+RUN mvn -B -q -DskipTests package
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
