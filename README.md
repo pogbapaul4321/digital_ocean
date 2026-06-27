@@ -36,18 +36,7 @@ The server listens on `http://localhost:8080` by default.
 
 Deployed on DigitalOcean App Platform (Dockerfile build from GitHub).
 
-```bash
-# Health check
-curl https://orca-app-bivtw.ondigitalocean.app/health
-
-# Create a short URL
-curl -X POST https://orca-app-bivtw.ondigitalocean.app/api/urls \
-  -H "Content-Type: application/json" \
-  -d '{"url":"https://example.com","alias":"demo-link"}'
-
-# Redirect (open in browser)
-https://orca-app-bivtw.ondigitalocean.app/demo-link
-```
+See [API](#api) for full curl examples against the live URL.
 
 Set `BASE_URL=https://orca-app-bivtw.ondigitalocean.app` in DigitalOcean environment variables so `short_url` values use the correct domain.
 
@@ -61,10 +50,26 @@ Set `BASE_URL=https://orca-app-bivtw.ondigitalocean.app` in DigitalOcean environ
 
 ## API
 
+Set a base URL for the examples below:
+
+```bash
+# Local
+export BASE=http://localhost:8080
+
+# Production
+export BASE=https://orca-app-bivtw.ondigitalocean.app
+```
+
 ### Health Check
 
 ```bash
-curl http://localhost:8080/health
+curl -s "$BASE/health" | jq .
+```
+
+Expected:
+
+```json
+{"status":"ok"}
 ```
 
 ### Create Short URL
@@ -72,17 +77,25 @@ curl http://localhost:8080/health
 Auto-generated alias:
 
 ```bash
-curl -X POST http://localhost:8080/api/urls \
+curl -s -X POST "$BASE/api/urls" \
   -H "Content-Type: application/json" \
-  -d '{"url":"https://example.com/very/long/path"}'
+  -d '{"url":"https://example.com/very/long/path"}' | jq .
 ```
 
-Custom alias with TTL:
+Custom alias:
 
 ```bash
-curl -X POST http://localhost:8080/api/urls \
+curl -s -X POST "$BASE/api/urls" \
   -H "Content-Type: application/json" \
-  -d '{"url":"https://example.com","alias":"my-link","ttl_seconds":3600}'
+  -d '{"url":"https://digitalocean.com","alias":"do-link"}' | jq .
+```
+
+Custom alias with TTL (1 hour):
+
+```bash
+curl -s -X POST "$BASE/api/urls" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com","alias":"my-link","ttl_seconds":3600}' | jq .
 ```
 
 Example response:
@@ -101,13 +114,87 @@ Example response:
 ### Get Metadata
 
 ```bash
-curl http://localhost:8080/api/urls/my-link
+curl -s "$BASE/api/urls/do-link" | jq .
 ```
 
 ### Redirect
 
+Show redirect headers:
+
 ```bash
-curl -I http://localhost:8080/my-link
+curl -s -I "$BASE/do-link"
+```
+
+Follow redirect to the target site:
+
+```bash
+curl -s -L -o /dev/null -w "Final URL: %{url_effective}\nHTTP: %{http_code}\n" "$BASE/do-link"
+```
+
+Check access count after a redirect:
+
+```bash
+curl -s -I "$BASE/do-link" > /dev/null
+curl -s "$BASE/api/urls/do-link" | jq '.access_count'
+```
+
+### Error Cases
+
+Duplicate alias (`409 Conflict`):
+
+```bash
+curl -s -w "\nHTTP: %{http_code}\n" -X POST "$BASE/api/urls" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://other.com","alias":"do-link"}'
+```
+
+Invalid URL (`400 Bad Request`):
+
+```bash
+curl -s -w "\nHTTP: %{http_code}\n" -X POST "$BASE/api/urls" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"not-a-valid-url"}'
+```
+
+Alias not found (`404 Not Found`):
+
+```bash
+curl -s -w "\nHTTP: %{http_code}\n" "$BASE/api/urls/does-not-exist"
+```
+
+Expired link (`410 Gone`):
+
+```bash
+curl -s -X POST "$BASE/api/urls" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com/expired","alias":"expires-soon","ttl_seconds":2}'
+
+sleep 3
+
+curl -s -w "\nHTTP: %{http_code}\n" "$BASE/expires-soon"
+```
+
+### Quick Test Script
+
+```bash
+BASE=https://orca-app-bivtw.ondigitalocean.app
+
+echo "=== Health ==="
+curl -s "$BASE/health" | jq .
+
+echo "=== Create ==="
+curl -s -X POST "$BASE/api/urls" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com","alias":"curl-test"}' | jq .
+
+echo "=== Metadata ==="
+curl -s "$BASE/api/urls/curl-test" | jq .
+
+echo "=== Redirect ==="
+curl -s -I "$BASE/curl-test" | grep -E "HTTP|location"
+
+echo "=== Access count ==="
+curl -s "$BASE/api/urls/curl-test" | jq '.access_count'
 ```
 
 ## Testing
