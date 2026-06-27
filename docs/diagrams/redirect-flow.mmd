@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant C as Client
+    participant H as UrlController
+    participant S as UrlService
+    participant K as UrlCache
+    participant D as H2 Database
+
+    C->>H: GET /{alias}
+    H->>S: resolveRedirect(alias)
+    S->>K: Lookup alias
+    alt cache hit
+        K-->>S: long URL
+        S->>D: Increment access count (locked row)
+    else cache miss
+        S->>D: SELECT alias
+        D-->>S: row
+        S->>K: Populate cache
+        S->>D: Increment access count (locked row)
+    end
+    S-->>H: long URL
+    H-->>C: 302 Found

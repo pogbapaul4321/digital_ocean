@@ -30,6 +30,27 @@ Production-ready REST API service built with **Java 21** and **Spring Boot** tha
 
 The server listens on `http://localhost:8080` by default.
 
+## Live Deployment
+
+**Production URL:** https://orca-app-bivtw.ondigitalocean.app
+
+Deployed on DigitalOcean App Platform (Dockerfile build from GitHub).
+
+```bash
+# Health check
+curl https://orca-app-bivtw.ondigitalocean.app/health
+
+# Create a short URL
+curl -X POST https://orca-app-bivtw.ondigitalocean.app/api/urls \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com","alias":"demo-link"}'
+
+# Redirect (open in browser)
+https://orca-app-bivtw.ondigitalocean.app/demo-link
+```
+
+Set `BASE_URL=https://orca-app-bivtw.ondigitalocean.app` in DigitalOcean environment variables so `short_url` values use the correct domain.
+
 ## Configuration
 
 | Variable | Default | Description |
@@ -115,6 +136,13 @@ docker run --rm -p 8080:8080 \
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for request lifecycle diagrams and component responsibilities.
+
+Exported diagram files:
+
+- [docs/architecture-diagrams.pdf](docs/architecture-diagrams.pdf) — all diagrams in one PDF
+- [docs/diagrams/system-overview.png](docs/diagrams/system-overview.png)
+- [docs/diagrams/create-url-flow.png](docs/diagrams/create-url-flow.png)
+- [docs/diagrams/redirect-flow.png](docs/diagrams/redirect-flow.png)
 
 ## Project Structure
 

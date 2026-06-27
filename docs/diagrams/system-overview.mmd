@@ -1,0 +1,15 @@
+flowchart LR
+    Client([Client])
+    API[Spring MVC Controllers]
+    Service[UrlService]
+    Cache[(In-Memory LRU Cache)]
+    DB[(H2 Database)]
+
+    Client -->|POST /api/urls| API
+    Client -->|"GET /api/urls/alias"| API
+    Client -->|"GET /alias"| API
+
+    API --> Service
+    Service --> Cache
+    Service --> DB
+    Cache -.->|cache miss| DB

@@ -2,6 +2,11 @@
 
 This document describes the request lifecycle and data flow for the URL Shortener REST API (Java / Spring Boot).
 
+Exported copies of these diagrams are available as:
+
+- [architecture-diagrams.pdf](architecture-diagrams.pdf)
+- PNG files in [diagrams/](diagrams/)
+
 ## System Overview
 
 ```mermaid
@@ -13,8 +18,8 @@ flowchart LR
     DB[(H2 Database)]
 
     Client -->|POST /api/urls| API
-    Client -->|GET /api/urls/{alias}| API
-    Client -->|GET /{alias}| API
+    Client -->|"GET /api/urls/{alias}"| API
+    Client -->|"GET /{alias}"| API
 
     API --> Service
     Service --> Cache

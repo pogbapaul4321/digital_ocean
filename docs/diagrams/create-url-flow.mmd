@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant C as Client
+    participant H as UrlController
+    participant S as UrlService
+    participant V as Validators
+    participant D as H2 Database
+
+    C->>H: POST /api/urls
+    H->>S: create(request)
+    S->>V: Validate URL, alias, TTL
+    alt custom alias
+        S->>D: INSERT with unique alias
+        D-->>S: success or conflict
+    else generated alias
+        S->>D: INSERT generated alias with retry
+    end
+    S-->>H: URL metadata
+    H-->>C: 201 Created
