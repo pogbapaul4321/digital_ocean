@@ -1,0 +1,13 @@
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+/target/
+/data/
+/bin/
+/.idea/
+/.classpath
+/.project
+/.settings/
+.env
+.DS_Store
